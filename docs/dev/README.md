@@ -1,23 +1,16 @@
 # Jini — Developer Guide
 
-**Private Document Intelligence**
-
-Jini is a local-first RAG workspace for personal documents. It turns policies, statements, agreements, invoices, tax records, and other life-admin files into searchable answers, reminders, and structured insights.
+**Private Document Intelligence** — a local-first RAG workspace for personal documents.
 
 ---
 
 ## Quick Start
 
 ```bash
-# Clone and install
-git clone <repo-url> jini
-cd jini
+git clone https://github.com/0xMudit/Jini.git
+cd Jini
 npm install
-
-# Copy environment file
 cp .env.example .env
-
-# Start development (web + API concurrently)
 npm run dev
 ```
 
@@ -27,11 +20,11 @@ npm run dev
 
 ### Default test accounts
 
-| Account  | Email              | Password       |
-|----------|--------------------|----------------|
-| Test     | test@jini.local    | JiniTest123!   |
-| HR       | hr@jini.local      | JiniHR123!     |
-| Guest    | guest@jini.local   | JiniGuest123!  |
+| Account | Email | Password |
+|---------|-------|----------|
+| Test | test@jini.local | JiniTest123! |
+| HR | hr@jini.local | JiniHR123! |
+| Guest | guest@jini.local | JiniGuest123! |
 
 The guest button on the login screen also provides one-click access with pre-seeded demo data.
 
@@ -41,51 +34,96 @@ The guest button on the login screen also provides one-click access with pre-see
 
 ```
 jini/
-├── server/              # Express API server (Node SQLite backend)
-│   ├── index.ts         # Route definitions, middleware, bootstrap
-│   ├── auth.ts          # User signup/login/sessions (scrypt, SQLite)
-│   ├── storage.ts       # Vault document/reminder CRUD (SQLite)
-│   ├── aiConfig.ts      # Groq API key management (env + session)
-│   ├── extractors.ts    # PDF, DOCX, XLSX, CSV, TXT text extraction
-│   ├── ingest.ts        # Category inference, chunking, reminder creation
-│   ├── rag.ts           # TF-IDF retrieval, extractive answers, intent matching
-│   ├── llm.ts           # Groq LLM answer synthesis
-│   ├── insights.ts      # Dashboard aggregates (payments, dates, tax checklist)
-│   ├── security.ts      # CSP headers, rate limiting
-│   ├── textUtils.ts     # Tokenizer, date/amount extraction, summarization
-│   ├── types.ts         # Shared TypeScript types
-│   └── sampleData.ts    # Demo document seeding
-├── src/                 # React SPA (Vite + TypeScript)
-│   ├── main.tsx         # App entry — routes /docs vs /app
-│   ├── Jini.tsx         # Main app component (1900+ lines)
-│   ├── Jini.css         # Dark Supabase-inspired styles
-│   ├── Docs.tsx         # In-app documentation page
-│   ├── Docs.css         # Documentation styles
-│   └── index.css        # Global reset styles
-├── data/                # Local storage (gitignored)
-│   ├── jini.sqlite      # SQLite database (users, sessions, documents, reminders)
-│   └── uploads/         # Uploaded file storage
-├── public/              # Static assets
-│   ├── favicon.svg
-│   └── icons.svg
-├── dist/                # Production build output (gitignored)
-├── docs/dev/            # Developer documentation (you are here)
-└── logs/                # Log output (gitignored)
+├── server/                 # Express API server
+│   ├── index.ts            # Routes, middleware, bootstrap
+│   ├── auth.ts             # User auth (scrypt, SQLite sessions)
+│   ├── storage.ts          # Document/reminder CRUD (SQLite)
+│   ├── aiConfig.ts         # Groq API key management
+│   ├── extractors.ts       # PDF, DOCX, XLSX, CSV, TXT extraction
+│   ├── ingest.ts           # Category inference, chunking, reminders
+│   ├── rag.ts              # TF-IDF retrieval, extractive answers
+│   ├── llm.ts              # Groq LLM synthesis
+│   ├── insights.ts         # Dashboard aggregates
+│   ├── security.ts         # CSP headers, rate limiting
+│   ├── textUtils.ts        # Tokenizer, date/amount extraction
+│   ├── types.ts            # Shared TypeScript types
+│   ├── sampleData.ts       # Demo document seeding
+│   ├── textUtils.test.ts   # Unit tests for text utilities
+│   └── rag.test.ts         # Unit tests for RAG pipeline
+├── src/                    # React SPA (Vite + TypeScript)
+│   ├── main.tsx            # Entry point with ErrorBoundary
+│   ├── Jini.tsx            # Main app component
+│   ├── Jini.css            # Dark UI styles
+│   ├── Docs.tsx / Docs.css # In-app documentation
+│   ├── index.css           # Global reset styles
+│   ├── types.ts            # Shared frontend types
+│   ├── lib/
+│   │   └── api.ts          # API client, error handling, formatters
+│   ├── components/         # Reusable UI components
+│   │   ├── ErrorBoundary.tsx
+│   │   ├── EmptyState.tsx
+│   │   ├── Metric.tsx
+│   │   ├── ProductTour.tsx
+│   │   ├── ReminderRow.tsx
+│   │   └── SectionHeading.tsx
+│   └── views/              # Page-level view components
+│       ├── AuthScreen.tsx
+│       ├── HomeView.tsx
+│       ├── AssistantView.tsx
+│       ├── LibraryView.tsx
+│       ├── TimelineView.tsx
+│       └── SettingsView.tsx
+├── data/                   # Local storage (gitignored)
+│   ├── jini.sqlite         # SQLite database
+│   └── uploads/            # Uploaded files
+├── dist/                   # Production build (gitignored)
+├── docs/dev/               # Developer docs (you are here)
+├── Dockerfile              # Multi-stage production build
+├── vitest.config.ts        # Test configuration
+└── .github/workflows/ci.yml # CI/CD pipeline
 ```
 
 ---
 
-## Tech Stack
+## Available Scripts
 
-| Layer        | Technology                            |
-|--------------|---------------------------------------|
-| Frontend     | React 19, TypeScript, Vite 8          |
-| Backend      | Express 5, TypeScript, tsx runner     |
-| Database     | SQLite (Node built-in `node:sqlite`)  |
-| Auth         | scrypt hashing, HMAC session tokens   |
-| LLM          | Groq (OpenAI-compatible API)          |
-| File parsing | pdf-parse, mammoth, read-excel-file   |
-| Dev runner   | concurrently (web + API)              |
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start web (Vite) + API (tsx watch) concurrently |
+| `npm run dev:web` | Start Vite dev server only |
+| `npm run dev:api` | Start API with hot-reload (tsx watch) |
+| `npm run api` | Start API server only (no watch) |
+| `npm start` | Start API server (production entrypoint) |
+| `npm run build` | Type-check + build frontend (tsc + vite build) |
+| `npm test` | Run all tests (vitest) |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run lint` | Run ESLint across all TS/TSX files |
+| `npm run preview` | Preview production build locally |
+
+---
+
+## Testing
+
+30 unit tests covering the core extraction and RAG logic:
+
+```bash
+npm test                # Run once
+npm run test:watch      # Watch mode
+```
+
+See [TESTING.md](./TESTING.md) for details.
+
+---
+
+## CI/CD
+
+Push to `main` triggers GitHub Actions:
+1. **Lint** — ESLint
+2. **Test** — Vitest (30 tests)
+3. **Build** — TypeScript check + Vite production build
+4. **Docker** — Build and push to `ghcr.io/0xMudit/Jini:latest`
+
+See `.github/workflows/ci.yml` for the full pipeline.
 
 ---
 
@@ -106,97 +144,11 @@ Both auth (users, sessions) and vault (documents, reminders) use Node's built-in
 ### Security Headers
 Every response includes CSP, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, and Cross-Origin-Opener-Policy headers.
 
----
+### Structured Logging
+Uses Pino with request-level logging (method, path, status, duration per request). Pretty-printed in development, JSON in production.
 
-## Available Scripts
-
-| Script          | Description                                      |
-|-----------------|--------------------------------------------------|
-| `npm run dev`   | Start web (Vite) + API (tsx watch) concurrently  |
-| `npm run dev:web` | Start Vite dev server only                     |
-| `npm run dev:api` | Start API with hot-reload (tsx watch)          |
-| `npm run api`   | Start API server only (no watch)                 |
-| `npm start`     | Start API server (production entrypoint)         |
-| `npm run build` | Type-check + build frontend (tsc + vite build)   |
-| `npm run lint`  | Run ESLint across all TS/TSX files               |
-| `npm run preview` | Preview production build locally               |
-
----
-
-## Development Workflow
-
-### 1. Environment Setup
-
-```bash
-cp .env.example .env
-```
-
-Key variables:
-
-| Variable             | Required | Default                     | Description                              |
-|----------------------|----------|-----------------------------|------------------------------------------|
-| `PORT`               | No       | `8788`                      | API server port                          |
-| `GROQ_API_KEY`       | No       | —                           | Groq API key for LLM answers             |
-| `GROQ_MODEL`         | No       | `llama-3.3-70b-versatile`   | Groq model name                          |
-| `ALLOWED_ORIGINS`    | No       | —                           | Comma-separated CORS origins             |
-| `COOKIE_SECURE`      | No       | `false`                     | Set `true` behind HTTPS                  |
-| `TRUST_PROXY`        | No       | —                           | Set `true` behind a reverse proxy        |
-
-### 2. Run Tests
-
-There are currently no automated tests. To verify changes:
-
-```bash
-# Start the API
-npm run dev:api
-
-# In another terminal, verify health
-curl http://localhost:8788/api/health
-
-# Run the linter
-npm run lint
-
-# Build the frontend
-npm run build
-```
-
-### 3. Making Changes
-
-- The API server uses `tsx watch` for auto-restart on file changes.
-- Vite's dev server proxies `/api` to `http://localhost:8788`.
-- Frontend changes reflect instantly via HMR.
-- Add server routes in `server/index.ts`.
-- Add frontend views in `src/` (all state is in `Jini.tsx`).
-
----
-
-## API Overview
-
-All authenticated routes require a session cookie set by `POST /api/auth/login`, `/signup`, or `/guest`.
-
-| Method | Path                    | Description                          |
-|--------|-------------------------|--------------------------------------|
-| POST   | `/api/auth/signup`      | Create account + start session       |
-| POST   | `/api/auth/login`       | Authenticate + start session         |
-| POST   | `/api/auth/guest`       | Guest session                        |
-| GET    | `/api/auth/me`          | Current user info                    |
-| POST   | `/api/auth/logout`      | End session                          |
-| GET    | `/api/documents`        | List user's documents                |
-| GET    | `/api/documents/:id`    | Get document detail                  |
-| POST   | `/api/documents`        | Upload and index documents           |
-| DELETE | `/api/documents/:id`    | Delete a document                    |
-| POST   | `/api/query`            | Ask a question (RAG)                 |
-| GET    | `/api/search?q=&cat=`   | Raw search                           |
-| GET    | `/api/reminders`        | List reminders                       |
-| PATCH  | `/api/reminders/:id`    | Update reminder status               |
-| GET    | `/api/insights`         | Dashboard aggregates                 |
-| GET    | `/api/settings/ai`      | Get AI config status                 |
-| PUT    | `/api/settings/ai`      | Set session-only Groq config         |
-| DELETE | `/api/settings/ai`      | Clear session Groq config            |
-| POST   | `/api/demo/seed`        | Seed demo documents                  |
-| GET    | `/api/health`           | Health check                         |
-
-Full details in [API.md](./API.md).
+### Graceful Shutdown
+Handles SIGTERM/SIGINT with a 10-second forced shutdown timeout. Unhandled rejections and uncaught exceptions are logged.
 
 ---
 
@@ -218,7 +170,7 @@ Upload → Extract (PDF/DOCX/XLSX/CSV/TXT) → Ingest:
 
 ## Deployment
 
-See [DEPLOY.md](./DEPLOY.md) for EC2, Docker, and PM2 deployment guides.
+See [DEPLOY.md](./DEPLOY.md) for Docker and EC2 deployment guides.
 
 ---
 

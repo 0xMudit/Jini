@@ -10,19 +10,19 @@ Jini is designed as a local-first application. Security boundaries exist between
 
 ### Password Storage
 - Passwords are hashed with **scrypt** using a 16-byte random salt and 64-byte derived key.
-- The salt and hash are stored as salt:hash in the users table.
-- Verification uses 	imingSafeEqual to prevent timing attacks.
+- The salt and hash are stored as `salt:hash` in the users table.
+- Verification uses `timingSafeEqual` to prevent timing attacks.
 
 ### Session Tokens
-- Session tokens are 32 cryptographically random bytes (andomBytes(32)), Base64URL-encoded.
+- Session tokens are 32 cryptographically random bytes (`randomBytes(32)`), Base64URL-encoded.
 - Tokens are SHA-256 hashed before storage in the sessions table. Plaintext tokens are never persisted.
 - Sessions expire after 7 days. Expired sessions are cleaned up on server start.
 
 ### Cookie Security
 - Session cookie is **HttpOnly** (inaccessible to JavaScript).
 - **SameSite=Lax** protects against CSRF.
-- **Secure** flag is enabled when COOKIE_SECURE=true (behind HTTPS).
-- The cookie name is jini_session.
+- **Secure** flag is enabled when `COOKIE_SECURE=true` (behind HTTPS).
+- The cookie name is `jini_session`.
 
 ---
 
@@ -35,7 +35,7 @@ Jini is designed as a local-first application. Security boundaries exist between
 - Rate-limited requests receive 429 status with Retry-After header.
 
 ### CORS
-- Whitelist-based CORS via ALLOWED_ORIGINS env variable.
+- Whitelist-based CORS via `ALLOWED_ORIGINS` env variable.
 - Local origins (localhost, 127.0.0.1, [::1]) are always allowed.
 - Credentials (cookies) are only sent to allowed origins.
 
@@ -48,8 +48,7 @@ Jini is designed as a local-first application. Security boundaries exist between
 
 | Header | Value |
 |--------|-------|
-| X-Content-Type-Options | 
-osniff |
+| X-Content-Type-Options | nosniff |
 | Referrer-Policy | strict-origin-when-cross-origin |
 | Permissions-Policy | camera=(), microphone=(), geolocation=(), payment=() |
 | Cross-Origin-Opener-Policy | same-origin |
@@ -60,14 +59,25 @@ osniff |
 ### Error Handling
 - Server errors return a generic "Unexpected server error" message.
 - Validation errors expose only the first Zod issue message.
-- All errors include a equestId for log correlation.
+- All errors include a `requestId` for log correlation.
+- Errors are logged via Pino with the full error stack trace.
+
+### Request Logging
+- Every request is logged with method, path, status code, and duration.
+- Request IDs are propagated via `X-Request-Id` response header.
+- Logs are structured JSON (Pino) — no sensitive data is logged.
+
+### Graceful Shutdown
+- SIGTERM/SIGINT handlers close the HTTP server gracefully.
+- A 10-second timeout forces shutdown if connections don't drain.
+- Unhandled promise rejections and uncaught exceptions are logged.
 
 ---
 
 ## Data Isolation
 
-- Every vault query is scoped to ownerId derived from the authenticated session.
-- GET /api/documents/:id verifies ownership before returning data.
+- Every vault query is scoped to `ownerId` derived from the authenticated session.
+- `GET /api/documents/:id` verifies ownership before returning data.
 - Users cannot access other users' documents, reminders, or settings.
 
 ---
@@ -82,13 +92,13 @@ osniff |
 - When querying, only the retrieved snippets (not full documents) are sent to Groq.
 
 ### No Keys in Transit to Browser
-The /api/settings/ai endpoint returns { configured: true/false } but never the key itself.
+The `/api/settings/ai` endpoint returns `{ configured: true/false }` but never the key itself.
 
 ---
 
 ## File System Security
 
-- Uploaded files are stored in data/uploads/ with random filenames (via multer).
+- Uploaded files are stored in `data/uploads/` with random filenames (via multer).
 - File extensions are validated against an allowlist.
 - File size is limited to 25 MB.
 - Document text extraction does not execute any code from uploaded files.
@@ -101,13 +111,13 @@ The /api/settings/ai endpoint returns { configured: true/false } but never the k
 - WAL mode is enabled for concurrent read performance.
 - Foreign key constraints are enforced.
 - Queries use parameterized prepared statements (no SQL injection risk).
-- The database file is stored in data/ which is gitignored.
+- The database file is stored in `data/` which is gitignored.
 
 ---
 
 ## CSP Bypass Considerations
 
-The CSP allows img-src 'self' data: blob: and style-src 'self'. If user-uploaded content is ever rendered as HTML (not currently the case), this could be a vector. Currently, extracted text is displayed as plain text in React.
+The CSP allows `img-src 'self' data: blob:` and `style-src 'self'`. If user-uploaded content is ever rendered as HTML (not currently the case), this could be a vector. Currently, extracted text is displayed as plain text in React.
 
 ---
 
@@ -123,4 +133,6 @@ The CSP allows img-src 'self' data: blob: and style-src 'self'. If user-uploaded
 | Unauthorized document access | Owner-scoped queries |
 | API key leak | Keys never returned to browser, session keys in memory only |
 | File upload RCE | Extension allowlist, no code execution |
-| Timing attack on passwords | 	imingSafeEqual for scrypt verification |
+| Timing attack on passwords | timingSafeEqual for scrypt verification |
+| DoS via large uploads | 25 MB file limit, 12 file limit |
+| Unhandled errors crash server | Graceful shutdown, uncaughtException handler |

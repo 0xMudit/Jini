@@ -2,29 +2,31 @@
 
 Base URL: http://localhost:8788 (proxied through Vite at /api in development)
 
+---
+
 ## Authentication
 
-All endpoints except /api/health, /api/auth/login, /api/auth/signup, and /api/auth/guest require a valid session cookie (jini_session).
+All endpoints except `/api/health`, `/api/auth/login`, `/api/auth/signup`, and `/api/auth/guest` require a valid session cookie (`jini_session`).
 
 ### POST /api/auth/signup
 
 Create a new user account and start an authenticated session.
 
 **Body:**
-`json
+```json
 {
   "name": "string (2-80 chars)",
   "email": "valid email",
   "password": "string (8-128 chars)"
 }
-`
+```
 
-**Response** 201:
-`json
+**Response 201:**
+```json
 {
   "user": { "id": "string", "name": "string", "email": "string", "role": "member" }
 }
-`
+```
 
 **Errors:** 409 if email already exists, 400 for validation.
 
@@ -33,19 +35,19 @@ Create a new user account and start an authenticated session.
 Authenticate with email and password.
 
 **Body:**
-`json
+```json
 {
   "email": "valid email",
   "password": "string"
 }
-`
+```
 
-**Response** 200:
-`json
+**Response 200:**
+```json
 {
   "user": { "id": "string", "name": "string", "email": "string", "role": "string" }
 }
-`
+```
 
 **Error:** 401 for invalid credentials.
 
@@ -53,23 +55,23 @@ Authenticate with email and password.
 
 Start a session as the pre-seeded guest user.
 
-**Response** 200:
-`json
+**Response 200:**
+```json
 {
   "user": { "id": "seed-guest", "name": "Guest User", "email": "guest@jini.local", "role": "guest" }
 }
-`
+```
 
 ### GET /api/auth/me
 
 Get the currently authenticated user's info.
 
-**Response** 200:
-`json
+**Response 200:**
+```json
 {
   "user": { "id": "string", "name": "string", "email": "string", "role": "string" }
 }
-`
+```
 
 **Error:** 401 if not authenticated.
 
@@ -87,8 +89,8 @@ End the current session.
 
 List all documents owned by the current user.
 
-**Response** 200:
-`json
+**Response 200:**
+```json
 [
   {
     "id": "string",
@@ -105,15 +107,15 @@ List all documents owned by the current user.
     "amounts": []
   }
 ]
-`
+```
 
-Note: extractedText and chunks are omitted from the list response.
+Note: `extractedText` and `chunks` are omitted from the list response.
 
 ### GET /api/documents/:id
 
 Get a single document with full extracted text and chunks.
 
-**Response** 200: Full VaultDocument object.
+**Response 200:** Full VaultDocument object.
 
 **Error:** 404 if not found or not owned by user.
 
@@ -126,13 +128,13 @@ Upload and index one or more documents.
 - **Limits:** 25 MB per file, 12 files per request
 - **Accepted types:** .pdf, .docx, .xlsx, .csv, .txt, .md, .json
 
-**Response** 201:
-`json
+**Response 201:**
+```json
 {
   "documents": [],
   "reminders": []
 }
-`
+```
 
 ### DELETE /api/documents/:id
 
@@ -149,7 +151,7 @@ Delete a document and its reminders. Also deletes the uploaded file.
 Ask a question against the user's document vault using RAG.
 
 **Body:**
-`json
+```json
 {
   "question": "string (min 2 chars)",
   "category": "string (optional, filter by category)",
@@ -158,12 +160,12 @@ Ask a question against the user's document vault using RAG.
     { "role": "assistant", "content": "string (max 1600)" }
   ]
 }
-`
+```
 
-history is limited to 8 turns.
+`history` is limited to 8 turns.
 
-**Response** 200:
-`json
+**Response 200:**
+```json
 {
   "answer": "string",
   "mode": "extractive | llm",
@@ -179,9 +181,9 @@ history is limited to 8 turns.
   ],
   "suggestedActions": ["string"]
 }
-`
+```
 
-- mode: "llm" when Groq synthesized the answer; "extractive" when local.
+- `mode`: "llm" when Groq synthesized the answer; "extractive" when local.
 - Citations contain the top 5 matching chunks.
 
 ### GET /api/search
@@ -189,11 +191,11 @@ history is limited to 8 turns.
 Raw search across user documents.
 
 **Query parameters:**
-- q (string): search query
-- category (string, default "All"): filter by category
+- `q` (string): search query
+- `category` (string, default "All"): filter by category
 
-**Response** 200:
-`json
+**Response 200:**
+```json
 [
   {
     "documentId": "string",
@@ -203,7 +205,7 @@ Raw search across user documents.
     "score": 0.123
   }
 ]
-`
+```
 
 ---
 
@@ -213,8 +215,8 @@ Raw search across user documents.
 
 List all reminders for the current user, ordered by due date ascending.
 
-**Response** 200:
-`json
+**Response 200:**
+```json
 [
   {
     "id": "string",
@@ -229,18 +231,18 @@ List all reminders for the current user, ordered by due date ascending.
     "createdAt": "ISO-8601"
   }
 ]
-`
+```
 
 ### PATCH /api/reminders/:id
 
 Update reminder status.
 
 **Body:**
-`json
+```json
 { "status": "open | done" }
-`
+```
 
-**Response** 200: Updated reminder object.
+**Response 200:** Updated reminder object.
 
 **Error:** 404 if not found.
 
@@ -252,8 +254,8 @@ Update reminder status.
 
 Dashboard aggregates.
 
-**Response** 200:
-`json
+**Response 200:**
+```json
 {
   "totals": {
     "documents": 5,
@@ -267,7 +269,7 @@ Dashboard aggregates.
   "upcomingDates": [],
   "taxChecklist": []
 }
-`
+```
 
 ---
 
@@ -277,35 +279,35 @@ Dashboard aggregates.
 
 Get current AI configuration status.
 
-**Response** 200:
-`json
+**Response 200:**
+```json
 {
   "configured": true,
   "model": "llama-3.3-70b-versatile",
   "source": "environment | session | none",
   "provider": "Groq"
 }
-`
+```
 
 ### PUT /api/settings/ai
 
 Set a session-only Groq API key and model.
 
 **Body:**
-`json
+```json
 {
   "apiKey": "string (min 20 chars)",
   "model": "string (default: llama-3.3-70b-versatile)"
 }
-`
+```
 
-**Response** 200: Updated AI settings.
+**Response 200:** Updated AI settings.
 
 ### DELETE /api/settings/ai
 
 Clear the session-only Groq configuration.
 
-**Response** 200: AI settings (configured: false).
+**Response 200:** AI settings (configured: false).
 
 ---
 
@@ -315,13 +317,13 @@ Clear the session-only Groq configuration.
 
 Replace demo documents for the current user with fresh sample data.
 
-**Response** 201:
-`json
+**Response 201:**
+```json
 {
   "documents": [],
   "reminders": []
 }
-`
+```
 
 ---
 
@@ -329,14 +331,20 @@ Replace demo documents for the current user with fresh sample data.
 
 ### GET /api/health
 
-**Response** 200:
-`json
+**Response 200:**
+```json
 {
   "ok": true,
   "service": "Jini",
-  "groq": true
+  "version": "0.1.0",
+  "uptime": 1234.56,
+  "groq": true,
+  "aiProvider": "Groq",
+  "mode": "hybrid | local"
 }
-`
+```
+
+`mode` is "hybrid" when Groq is configured, "local" when only extractive RAG is available.
 
 ---
 
@@ -344,21 +352,23 @@ Replace demo documents for the current user with fresh sample data.
 
 All errors return JSON:
 
-`json
+```json
 {
   "error": "Human-readable error message",
   "requestId": "unique-id"
 }
-`
+```
 
 | Status | Description |
 |--------|-------------|
-| 400    | Validation error, unsupported file type, multer error |
-| 401    | Authentication required |
-| 404    | Resource not found |
-| 409    | Email already exists |
-| 429    | Rate limited (includes Retry-After header) |
-| 500    | Unexpected server error |
+| 400 | Validation error, unsupported file type, multer error |
+| 401 | Authentication required |
+| 404 | Resource not found |
+| 409 | Email already exists |
+| 429 | Rate limited (includes Retry-After header) |
+| 500 | Unexpected server error |
+
+Each error includes a `requestId` for log correlation.
 
 ---
 
@@ -370,3 +380,21 @@ All errors return JSON:
 | /api | 1 min | 240 |
 
 Rate limit buckets reset on server restart.
+
+---
+
+## Logging
+
+Every request is logged with:
+
+```json
+{
+  "method": "GET",
+  "path": "/api/documents",
+  "status": 200,
+  "duration": 42,
+  "requestId": "abc123"
+}
+```
+
+Logs are JSON in production (`NODE_ENV=production`), pretty-printed in development. Set `LOG_LEVEL` env var to control verbosity (debug, info, warn, error).
