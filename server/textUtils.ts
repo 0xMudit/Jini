@@ -129,7 +129,7 @@ export function inferCategory(text: string, fileName: string): DocumentCategory 
 export function inferTags(text: string, category: DocumentCategory): string[] {
   const tags = new Set<string>([category]);
   const rules: Array<[string, RegExp]> = [
-    ["expiry", /\b(expir|valid till|valid up to|renewal|maturity)\b/i],
+    ["expiry", /\b(expir\w*|valid till|valid up to|renewal|maturity)\b/i],
     ["payment", /\b(payment|paid|debit|credit|upi|emi|premium)\b/i],
     ["tax", /\b(tax|tds|deduction|itr|form 16)\b/i],
     ["identity", /\b(aadhaar|pan|passport)\b/i],

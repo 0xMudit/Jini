@@ -1,10 +1,12 @@
 import "dotenv/config";
+import compression from "compression";
 import cors from "cors";
 import express from "express";
 import multer from "multer";
 import { nanoid } from "nanoid";
 import { rm } from "node:fs/promises";
 import path from "node:path";
+import { pino } from "pino";
 import { z } from "zod";
 import {
   clearSessionGroqConfig,
@@ -41,6 +43,14 @@ import {
   uploadsDir,
 } from "./storage";
 
+const logger = pino({
+  level: process.env.LOG_LEVEL ?? "info",
+  transport:
+    process.env.NODE_ENV !== "production"
+      ? { target: "pino-pretty", options: { colorize: true } }
+      : undefined,
+});
+
 await ensureDataDirs();
 initializeAuthDatabase();
 
@@ -68,11 +78,25 @@ if (process.env.TRUST_PROXY === "true") {
 }
 
 app.disable("x-powered-by");
+app.use(compression());
 app.use(securityHeaders);
 app.use((request, response, next) => {
   const requestId = request.header("x-request-id") || nanoid(10);
   response.locals.requestId = requestId;
   response.setHeader("X-Request-Id", requestId);
+  const start = Date.now();
+  response.on("finish", () => {
+    logger.info(
+      {
+        method: request.method,
+        path: request.path,
+        status: response.statusCode,
+        duration: Date.now() - start,
+        requestId,
+      },
+      "Request completed",
+    );
+  });
   next();
 });
 app.use(
@@ -100,7 +124,11 @@ app.get("/api/health", (_request, response) => {
   response.json({
     ok: true,
     service: "Jini",
+    version: "0.1.0",
+    uptime: process.uptime(),
     groq: aiSettings.configured,
+    aiProvider: aiSettings.configured ? "Groq" : null,
+    mode: aiSettings.configured ? "hybrid" : "local",
   });
 });
 
@@ -375,8 +403,7 @@ app.get(/^(?!\/api).*/, (_request, response) => {
   response.sendFile(path.join(projectRoot, "dist", "index.html"));
 });
 
-app.use((error: unknown, _request: express.Request, response: express.Response, next: express.NextFunction) => {
-  void next;
+app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
   const requestId = String(response.locals.requestId || nanoid(8));
 
   if (error instanceof z.ZodError) {
@@ -397,11 +424,36 @@ app.use((error: unknown, _request: express.Request, response: express.Response, 
     return;
   }
 
+  logger.error({ err: error, requestId }, "Unhandled server error");
   response.status(500).json({ error: "Unexpected server error", requestId });
 });
 
-app.listen(port, () => {
-  console.log(`Jini API running on http://localhost:${port}`);
+const server = app.listen(port, () => {
+  logger.info({ port }, "Jini API started");
+});
+
+function shutdown(signal: string) {
+  logger.info({ signal }, "Shutdown signal received");
+  server.close(() => {
+    logger.info("HTTP server closed");
+    process.exit(0);
+  });
+  setTimeout(() => {
+    logger.error("Forced shutdown after timeout");
+    process.exit(1);
+  }, 10_000).unref();
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+process.on("unhandledRejection", (reason) => {
+  logger.error({ err: reason }, "Unhandled promise rejection");
+});
+
+process.on("uncaughtException", (error) => {
+  logger.error({ err: error }, "Uncaught exception");
+  shutdown("uncaughtException");
 });
 
 function readableTitle(fileName: string) {
