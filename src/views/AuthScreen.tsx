@@ -4,6 +4,8 @@ import {
   LogIn, Loader2, ShieldCheck, Sparkles, UserPlus,
 } from "lucide-react";
 
+const docsHref = `${import.meta.env.BASE_URL}docs`;
+
 export function AuthScreen({
   busy,
   error,
@@ -97,7 +99,7 @@ export function AuthScreen({
             <button className="secondary-button" disabled={busy} onClick={() => void onGuest()} type="button">Try live demo</button>
           </div>
           <p className="auth-test-hint">Test user login: <code>test@jini.local</code> / <code>JiniTest123!</code></p>
-          <a className="auth-docs-link" href="/docs"><BookOpen size={14} /> Read the docs</a>
+          <a className="auth-docs-link" href={docsHref}><BookOpen size={14} /> Read the docs</a>
         </section>
       </main>
     </div>

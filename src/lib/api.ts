@@ -1,5 +1,12 @@
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 
+const apiBase = (import.meta.env.VITE_API_BASE ?? "").replace(/\/$/, "");
+
+function resolveRequestPath(path: string) {
+  if (apiBase && path.startsWith("/api")) return `${apiBase}${path.slice(4)}`;
+  return path;
+}
+
 export class RequestError extends Error {
   status: number;
 
@@ -11,7 +18,7 @@ export class RequestError extends Error {
 }
 
 export async function request<T>(path: string, init?: RequestInit, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(path, { ...init, credentials: "include", signal });
+  const response = await fetch(resolveRequestPath(path), { ...init, credentials: "include", signal });
   if (!response.ok) {
     const body = await response.text();
     let message = body || `Request failed: ${response.status}`;

@@ -15,6 +15,8 @@ import { TimelineView } from "./views/TimelineView";
 import { SettingsView } from "./views/SettingsView";
 import "./Jini.css";
 
+const docsHref = `${import.meta.env.BASE_URL}docs`;
+
 function Jini() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
@@ -424,7 +426,7 @@ function Jini() {
             <span aria-label={aiSettings.configured ? "AI connected" : "AI not connected"} className={aiSettings.configured ? "connection-dot connected" : "connection-dot"} />
           </button>
           <button className="nav-item" onClick={() => void signOut()} type="button"><LogOut size={17} /><span>Sign out</span></button>
-          <a className="nav-item nav-link" href="/docs"><BookOpen size={17} /><span>Documentation</span></a>
+          <a className="nav-item nav-link" href={docsHref}><BookOpen size={17} /><span>Documentation</span></a>
           <div className="privacy-note"><LockKeyhole size={15} /><span>Documents stay on this machine</span></div>
         </div>
       </aside>

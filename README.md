@@ -4,16 +4,31 @@
 
 Turn policies, statements, agreements, invoices, tax records, and other life-admin files into searchable answers, reminders, and structured insights.
 
+[Live demo](https://malcomman.duckdns.org/jini/) · [Developer documentation](https://malcomman.duckdns.org/jini/docs) · [Portfolio](https://malcomman.duckdns.org/muditya/)
+
+## Why this project matters
+
+Jini demonstrates an end-to-end document intelligence workflow without requiring a hosted vector database or a paid model. It combines multi-format ingestion, ranked retrieval, citations, structured extraction, authentication, persistence, security controls, tests, and containerized delivery in one TypeScript codebase.
+
+### Engineering highlights
+
+- Local-first processing and SQLite persistence keep the default workflow private and self-contained.
+- Retrieval works without an API key; Groq synthesis is an optional enhancement rather than a hard dependency.
+- Upload validation, rate limiting, defensive headers, secure cookies, and origin controls are built into the API.
+- Thirty unit tests cover extraction utilities, ranking, parsing, and answer generation.
+- The responsive application and built-in documentation are deployed under a reverse-proxy subpath.
+
 ---
 
 ## Quick Start
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev
 ```
 
-Open `http://localhost:5173`. The API runs at `http://localhost:8788`; Vite proxies `/api` to it.
+Open `http://localhost:5173/jini/`. The API runs at `http://localhost:8788`; Vite proxies `/api` to it.
 
 ### Test accounts
 - **Test user**: `test@jini.local` / `JiniTest123!`
@@ -99,6 +114,7 @@ Open port `8788` in the EC2 security group, then visit `http://<EC2_PUBLIC_IP>:8
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `8788` | HTTP server port |
+| `VITE_API_BASE` | same origin | Optional browser API origin; leave empty when using the Vite/nginx proxy |
 | `NODE_ENV` | `production` | Set `development` for pretty logging |
 | `LOG_LEVEL` | `info` | Pino log level (debug, info, warn, error) |
 | `GROQ_API_KEY` | — | Groq API key for LLM synthesis |
